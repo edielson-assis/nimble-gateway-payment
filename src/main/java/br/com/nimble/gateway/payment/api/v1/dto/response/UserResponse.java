@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserSignupResponse implements Serializable {
+public class UserResponse implements Serializable {
 
     private String fullName;
     private String cpf;
