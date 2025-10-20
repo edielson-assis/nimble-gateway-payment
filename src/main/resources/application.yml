@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: nimble-gateway-payment
+  profiles:
+    active: ${ACTIVE_PROFILE:dev}

@@ -1,0 +1,52 @@
+# Server settings
+server:
+  port: ${SERVER_PORT}
+  error:
+    include-stacktrace: never
+
+# Spring settings
+      
+# Spring datasource settings
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useTimezone=true&serverTimezone=UTC
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      pool-name: HikariCP
+      connection-test-query: "SELECT 1"
+      auto-commit: false
+      maximum-pool-size: 5
+      minimum-idle: 1
+      initialization-fail-timeout: 2000
+      isolate-internal-queries: true
+      validation-timeout: 3000
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+  
+# Spring JPA settings  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+
+# Spring flyway settings
+  flyway:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useTimezone=true&serverTimezone=UTC
+    schemas: ${DB_NAME}
+    user: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
