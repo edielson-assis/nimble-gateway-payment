@@ -1,0 +1,20 @@
+package br.com.nimble.gateway.payment.domain.repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+import br.com.nimble.gateway.payment.domain.model.UserModel;
+
+public interface UserRepository extends JpaRepository<UserModel, UUID>, JpaSpecificationExecutor<UserModel> {
+
+    boolean existsByEmail(String email);
+
+    boolean existsByCpf(String cpf);
+
+    @EntityGraph(attributePaths = "permissions", type = EntityGraph.EntityGraphType.FETCH)
+    Optional<UserModel> findByEmailOrCpf(String emailOrCpf);
+}
