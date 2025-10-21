@@ -19,7 +19,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserDetails loadUserByUsername(String emailOrCpf) {
         log.info("Verifying the user's email or CPF: {}", emailOrCpf);
-        return repository.findByEmailOrCpf(emailOrCpf).orElseThrow(() -> {
+        return repository.findByEmailOrCpf(emailOrCpf, emailOrCpf).orElseThrow(() -> {
             log.error("Email or CPF not found: {}", emailOrCpf);
             return new UsernameNotFoundException("Email or CPF not found");
         });    

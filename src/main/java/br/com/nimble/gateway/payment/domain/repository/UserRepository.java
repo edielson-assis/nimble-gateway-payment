@@ -11,10 +11,6 @@ import br.com.nimble.gateway.payment.domain.model.UserModel;
 
 public interface UserRepository extends JpaRepository<UserModel, UUID>, JpaSpecificationExecutor<UserModel> {
 
-    boolean existsByEmail(String email);
-
-    boolean existsByCpf(String cpf);
-
     @EntityGraph(attributePaths = "permissions", type = EntityGraph.EntityGraphType.FETCH)
-    Optional<UserModel> findByEmailOrCpf(String emailOrCpf);
+    Optional<UserModel> findByEmailOrCpf(String email, String cpf);
 }

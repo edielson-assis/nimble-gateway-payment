@@ -22,6 +22,12 @@ public class UserMapper {
         return userModel;
     }
 
+    public static UserModel toEntity(UserModel userModel, UserType userType, RoleModel role) {
+        userModel.setUserType(userType);
+        userModel.getPermissions().add(role);
+        return userModel;
+    }
+
     public static UserResponse toDto(UserModel userModel) {
         var userResponse = new UserResponse();
         BeanUtils.copyProperties(userModel, userResponse);
