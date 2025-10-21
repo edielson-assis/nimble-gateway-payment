@@ -138,9 +138,6 @@ public class UserServiceImpl implements UserService {
 
     private UserModel findByEmailOrCpf(String email, String cpf) {
         log.info("Verifying the user's email or CPF");
-        return userRepository.findByEmailOrCpf(email, cpf).orElseThrow(() -> {
-            log.error("Email or CPF not found");
-            throw new ObjectNotFoundException("Email or CPF not found");
-        });
+        return userRepository.findByEmailOrCpf(email, cpf).orElse(null);
     }
 }

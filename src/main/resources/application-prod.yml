@@ -4,7 +4,17 @@ server:
   error:
     include-stacktrace: never
 
-# Spring settings
+# CORS settings
+cors:
+  allowedOrigins: ${ALLOWED_ORIGINS}
+
+# Security JWT settings
+security:
+  jwt:
+    token:
+      secret-key: ${SECRET_KEY}
+      expiration-length: ${EXPIRATION_TOKEN}
+      refresh-expiration-length: ${EXPIRATION_REFRESH_TOKEN}
       
 # Spring datasource settings
 spring:
