@@ -30,8 +30,8 @@ public class SecurityConfig {
     private static final String MODERATOR = "MODERATOR";
     private static final String USER = "USER";
     private static final String[] PUBLIC_METHODS = {"/api/v1/auth/**"};
-    private static final String[] ADMIN_MODERATOR_METHODS = {"/users"};
-    private static final String[] USER_METHODS = {"/users/**"};
+    private static final String[] ADMIN_MODERATOR_METHODS = {"/api/v1/users"};
+    private static final String[] USER_METHODS = {"/api/v1/users/**"};
 
     @Bean
     public RoleHierarchy roleHierarchy() {
