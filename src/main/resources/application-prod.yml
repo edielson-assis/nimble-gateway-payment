@@ -60,3 +60,12 @@ spring:
     schemas: ${DB_NAME}
     user: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
+# SpringDoc settings
+springdoc:
+  pathsToMatch: /api/v1/**
+  swagger-ui:
+    use-root-path: true
+  server:
+    url: ${SWAGGER_SERVER_URL}
+    description: ${SERVER_DESCRIPTION:Production server}

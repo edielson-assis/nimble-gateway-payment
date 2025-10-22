@@ -1,4 +1,4 @@
-package br.com.nimble.gateway.payment.config.handler;
+package br.com.nimble.gateway.payment.api.v1.handler;
 
 import java.time.Instant;
 

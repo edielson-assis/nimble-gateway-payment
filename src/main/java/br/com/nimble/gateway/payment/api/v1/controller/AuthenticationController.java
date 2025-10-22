@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.nimble.gateway.payment.api.v1.doc.AuthenticationControllerDocs;
 import br.com.nimble.gateway.payment.api.v1.dto.request.UserSigninRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.request.UserSignupRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.TokenAndRefreshTokenResponse;
@@ -22,7 +23,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/auth")
-public class AuthenticationController {
+public class AuthenticationController implements AuthenticationControllerDocs {
 
     private final UserService userService;
 

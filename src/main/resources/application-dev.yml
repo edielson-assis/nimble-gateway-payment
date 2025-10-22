@@ -6,7 +6,7 @@ server:
 
 # CORS settings
 cors:
-  allowedOrigins: http://localhost:3000,http://localhost:8080
+  allowedOrigins: ${ALLOWED_ORIGINS:http://localhost:3000}
 
 # Security JWT settings
 security:
@@ -41,3 +41,12 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:nimble_gateway_payment}?useTimezone=true&serverTimezone=UTC
     user: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:1234567}
+
+# SpringDoc settings
+springdoc:
+  pathsToMatch: /api/v1/**
+  swagger-ui:
+    use-root-path: true
+  server:
+    url: ${SWAGGER_SERVER_URL:http://localhost:${SERVER_PORT:8080}}
+    description: ${SERVER_DESCRIPTION:Development server}
