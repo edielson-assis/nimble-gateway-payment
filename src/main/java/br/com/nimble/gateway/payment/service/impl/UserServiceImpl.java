@@ -6,13 +6,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.nimble.gateway.payment.api.v1.dto.request.UserPutPasswordRequest;
+import br.com.nimble.gateway.payment.api.v1.dto.request.UserPutRequest;
+import br.com.nimble.gateway.payment.api.v1.dto.request.UserSigninRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.request.UserSignupRequest;
+import br.com.nimble.gateway.payment.api.v1.dto.response.TokenAndRefreshTokenResponse;
+import br.com.nimble.gateway.payment.api.v1.dto.response.TokenResponse;
 import br.com.nimble.gateway.payment.api.v1.dto.response.UserResponse;
 import br.com.nimble.gateway.payment.api.v1.mapper.UserMapper;
+import br.com.nimble.gateway.payment.config.security.JwtTokenProvider;
+import br.com.nimble.gateway.payment.config.security.context.AuthenticatedUserProvider;
 import br.com.nimble.gateway.payment.domain.exception.ObjectNotFoundException;
 import br.com.nimble.gateway.payment.domain.model.RoleModel;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
@@ -33,6 +41,8 @@ public class UserServiceImpl implements UserService {
    
     private final UserRepository userRepository;
     private final RoleService roleService;
+    private final JwtTokenProvider tokenProvider;
+    private final AuthenticatedUserProvider authentication;
     private final PasswordEncoder encoder;
 
     @Override
@@ -74,8 +84,45 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
+    public UserResponse updateUser(UUID userId, UserPutRequest userDto) {
+        var userModel = findUserById(userId);
+        hasPermissionToFindUserData(userModel);
+        userModel = UserMapper.toEntity(userModel, userDto);
+        log.info("Updating user with name: {}", userDto.getFullName());
+        userRepository.save(userModel);
+        return UserMapper.toDto(userModel);
+    }
+
+    @Transactional
+    @Override
+    public String updateUserPassword(UserPutPasswordRequest userDto) {
+        var userModel = currentUser();
+        if (!encoder.matches(userDto.getOldPassword(), userModel.getPassword())) {
+            log.error("Old password does not match");
+            throw new ValidationException("Old password does not match");
+        }
+        userModel = UserMapper.toEntity(userModel, userDto);
+        encryptPassword(userModel);
+        log.info("Updating password");
+        userRepository.save(userModel);
+        return "Password updated successfully";
+    }
+
+    @Override
+    public TokenAndRefreshTokenResponse signin(UserSigninRequest userDto) {
+		return authentication.authenticateUser(userDto);
+	}
+	
+    @Override
+	public TokenResponse refreshToken(String username, String refreshToken) {
+        return tokenProvider.refreshToken(refreshToken, username);
+	}
+
+    @Transactional
+    @Override
     public void disableUser(UUID userId) {
         var userModel = findUserById(userId);
+        hasPermissionToFindUserData(userModel);
 		log.info("Disabling user with email: {}", userModel.getEmail());
 		userModel.setEnabled(false);
         userModel.setUserStatus(UserStatus.INACTIVE);
@@ -139,5 +186,23 @@ public class UserServiceImpl implements UserService {
     private UserModel findByEmailOrCpf(String email, String cpf) {
         log.info("Verifying the user's email or CPF");
         return userRepository.findByEmailOrCpf(email, cpf).orElse(null);
+    }
+
+    private boolean isAdminOrModerator(UserModel user) {
+        return user.getAuthorities().stream().anyMatch(permission -> 
+                permission.getAuthority().equals("ROLE_ADMIN") ||
+                permission.getAuthority().equals("ROLE_MODERATOR"));
+    }
+
+    private UserModel currentUser() {
+        return authentication.getCurrentUser();
+    }
+
+    private void hasPermissionToFindUserData(UserModel userModel) {
+        UserModel loggedUser = currentUser();
+        if (!(loggedUser.equals(userModel) || isAdminOrModerator(loggedUser))) {
+            log.error("Permission denied");
+            throw new AccessDeniedException("Permission denied");
+        }
     }
 }
