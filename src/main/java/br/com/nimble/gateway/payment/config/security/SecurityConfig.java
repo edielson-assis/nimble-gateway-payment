@@ -27,10 +27,12 @@ public class SecurityConfig {
     private final JwtTokenProvider tokenProvider;
     private final CorsConfig corsConfig;
 
+    private static final String ADMIN = "ADMIN";
     private static final String MODERATOR = "MODERATOR";
     private static final String USER = "USER";
     private static final String[] PUBLIC_METHODS = {"/api/v1/auth/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"};
     private static final String[] ADMIN_MODERATOR_METHODS = {"/api/v1/users"};
+    private static final String[] ADMIN_METHODS = {"/api/v1/auth/signup-moderator"};
     private static final String[] USER_METHODS = {"/api/v1/users/**"};
 
     @Bean
@@ -58,9 +60,10 @@ public class SecurityConfig {
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
                     .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                            .requestMatchers(PUBLIC_METHODS).permitAll()
+                            .requestMatchers(HttpMethod.POST, ADMIN_METHODS).hasRole(ADMIN)
                             .requestMatchers(HttpMethod.GET, ADMIN_MODERATOR_METHODS).hasRole(MODERATOR)
                             .requestMatchers(USER_METHODS).hasRole(USER)
+                            .requestMatchers(PUBLIC_METHODS).permitAll()
                             .anyRequest().authenticated())
                     .build();
     }

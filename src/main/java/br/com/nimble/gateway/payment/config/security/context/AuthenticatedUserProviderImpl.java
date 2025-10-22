@@ -12,6 +12,7 @@ import br.com.nimble.gateway.payment.api.v1.dto.response.TokenAndRefreshTokenRes
 import br.com.nimble.gateway.payment.config.security.JwtTokenProvider;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.repository.UserRepository;
+import br.com.nimble.gateway.payment.util.LoginUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -26,14 +27,12 @@ public class AuthenticatedUserProviderImpl implements AuthenticatedUserProvider 
 
     @Override
     public TokenAndRefreshTokenResponse authenticateUser(UserSigninRequest userDto) {
-        var email = userDto.getEmail();
-        var cpf = userDto.getCpf();
-        var username = email != null ? email : cpf;
+        var username = LoginUtils.normalizeLogin(userDto.getEmailOrCpf());
 		try {
 			log.debug("Authenticating user with username: {}", username);
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, userDto.getPassword()));
 			log.debug("Authentication successful for user: {}", username);
-			var user = findByEmailOrCpf(email, cpf);
+			var user = findByEmailOrCpf(username, username);
 			log.info("Generating access and refresh token for user: {}", username);
 			return tokenProvider.createAccessTokenRefreshToken(user.getUsername(), user.getRoles());
 		} catch (Exception e) {

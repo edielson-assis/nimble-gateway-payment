@@ -10,6 +10,7 @@ import br.com.nimble.gateway.payment.domain.model.RoleModel;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.model.enums.UserStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.UserType;
+import br.com.nimble.gateway.payment.util.LoginUtils;
 
 public class UserMapper {
     
@@ -18,6 +19,7 @@ public class UserMapper {
     public static UserModel toEntity(UserSignupRequest userDto, UserType userType, RoleModel role) {
         var userModel = new UserModel();
         BeanUtils.copyProperties(userDto, userModel);
+        userModel.setCpf(LoginUtils.normalizeCpf(userDto.getCpf()));
         userModel.setUserStatus(UserStatus.ACTIVE);
         userModel.setUserType(userType);
         userModel.getPermissions().add(role);

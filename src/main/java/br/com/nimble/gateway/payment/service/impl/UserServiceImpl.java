@@ -22,6 +22,7 @@ import br.com.nimble.gateway.payment.api.v1.mapper.UserMapper;
 import br.com.nimble.gateway.payment.config.security.JwtTokenProvider;
 import br.com.nimble.gateway.payment.config.security.context.AuthenticatedUserProvider;
 import br.com.nimble.gateway.payment.domain.exception.ObjectNotFoundException;
+import br.com.nimble.gateway.payment.domain.exception.ValidationException;
 import br.com.nimble.gateway.payment.domain.model.RoleModel;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.model.enums.UserStatus;
@@ -30,7 +31,6 @@ import br.com.nimble.gateway.payment.domain.repository.UserRepository;
 import br.com.nimble.gateway.payment.service.RoleService;
 import br.com.nimble.gateway.payment.service.UserService;
 import br.com.nimble.gateway.payment.util.Role;
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -59,8 +59,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse saveModerator(UserSignupRequest userDto) {
         var userModel = validateIfUserIsModerator(userDto);
-        log.info("Registering a new Moderator: {}", userModel.getFullName());
-        if (!existsByCpf(userModel, userDto) && !existsByEmail(userModel, userDto)) {
+        validadeIfUserIsAdmin(userModel);
+        log.info("Registering a new Moderator");
+        if (!(existsByCpf(userModel, userDto) && existsByEmail(userModel, userDto))) {
             userModel = UserMapper.toEntity(userDto, UserType.MODERATOR, getRoleType(Role.MODERATOR));
             encryptPassword(userModel);
             return saveUser(userModel);
@@ -142,6 +143,13 @@ public class UserServiceImpl implements UserService {
             throw new ValidationException("User is already a moderator");
         }
         return userModel;
+    }
+
+    private void validadeIfUserIsAdmin(UserModel userModel) {
+        if (userModel != null && userModel.getUserType() == UserType.ADMIN) {
+            log.error("Cannot modify an admin user: {}", userModel.getEmail());
+            throw new ValidationException("Cannot modify an admin user");
+        }
     }
 
     private void validateEmailNotExists(UserModel userModel, UserSignupRequest userDto) {
