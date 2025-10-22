@@ -39,6 +39,5 @@ spring:
 # Spring flyway settings
   flyway:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:nimble_gateway_payment}?useTimezone=true&serverTimezone=UTC
-    schemas: ${DB_NAME:nimble_gateway_payment}
     user: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:1234567}
