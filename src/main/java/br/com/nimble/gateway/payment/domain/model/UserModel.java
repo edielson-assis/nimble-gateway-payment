@@ -86,7 +86,7 @@ public class UserModel implements UserDetails {
   @JoinTable(name = "user_role", joinColumns = { @JoinColumn(name = "user_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
   private final List<RoleModel> permissions = new ArrayList<>();
 
-  public List<String> getRoles() {
+  public final List<String> getRoles() {
     return permissions.stream().map(RoleModel::getRoleName).collect(Collectors.toList());
   }
 

@@ -2,6 +2,8 @@ package br.com.nimble.gateway.payment.domain.model;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -11,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
@@ -34,4 +37,10 @@ public class Account implements Serializable {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserModel user;
+
+    @OneToMany(mappedBy = "fromAccount", fetch = FetchType.LAZY)
+    private final Set<Transaction> fromTransactions = new HashSet<>();
+
+    @OneToMany(mappedBy = "toAccount", fetch = FetchType.LAZY)
+    private final Set<Transaction> toTransactions = new HashSet<>();
 }

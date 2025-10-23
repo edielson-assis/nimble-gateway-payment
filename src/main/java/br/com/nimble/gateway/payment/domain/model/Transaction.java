@@ -5,8 +5,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import br.com.nimble.gateway.payment.domain.model.enums.ChargeStatus;
-import br.com.nimble.gateway.payment.domain.model.enums.PaymentMethod;
+import br.com.nimble.gateway.payment.domain.model.enums.TransactionStatus;
+import br.com.nimble.gateway.payment.domain.model.enums.TransactionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,44 +22,39 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-@EqualsAndHashCode(of = "chargeId")
+@EqualsAndHashCode(of = "transactionId")
 @Getter
 @Setter
 @Entity
-@Table(name = "charges")
-public class Charge implements Serializable {
+@Table(name = "transactions")
+public class Transaction implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID chargeId;
+    private UUID transactionId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private TransactionType type;
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(length = 255)
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "from_account_id")
+    private Account fromAccount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "to_account_id")
+    private Account toAccount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "charge_id")
+    private Charge charge;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private ChargeStatus status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method", length = 20)
-    private PaymentMethod paymentMethod;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "originator_id", nullable = false)
-    private UserModel originator;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recipient_id", nullable = false)
-    private UserModel recipient;
-
-    @Column(name = "paid_at")
-    private LocalDateTime paidAt;
-
-    @Column(name = "canceled_at")
-    private LocalDateTime canceledAt;
+    private TransactionStatus status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private final LocalDateTime createdAt = LocalDateTime.now();
