@@ -7,7 +7,3 @@ CREATE TABLE accounts(
     CONSTRAINT fk_accounts_user FOREIGN KEY(user_id) REFERENCES users(user_id),
     CONSTRAINT uq_accounts_user UNIQUE(user_id)
 );
-
-ALTER TABLE users
-    ADD COLUMN account_id UUID NOT NULL,
-    ADD CONSTRAINT fk_users_account FOREIGN KEY(account_id) REFERENCES accounts(account_id);

@@ -44,6 +44,7 @@ public class UserServiceImpl implements UserService {
     private final JwtTokenProvider tokenProvider;
     private final AuthenticatedUserProvider authentication;
     private final PasswordEncoder encoder;
+    private final AccountService accountService;
 
     @Override
     public UserResponse saveCommonUser(UserSignupRequest userDto) {
@@ -132,8 +133,9 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     private UserResponse saveUser(UserModel userModel) {
-        userRepository.save(userModel);
-        return UserMapper.toDto(userModel);
+        var user = userRepository.save(userModel);
+        accountService.createForUser(user);
+        return UserMapper.toDto(user);
     }
 
     private UserModel validateIfUserIsModerator(UserSignupRequest user) {

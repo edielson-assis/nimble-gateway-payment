@@ -11,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import br.com.nimble.gateway.payment.domain.model.enums.UserStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.UserType;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,7 +23,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -60,9 +58,6 @@ public class UserModel implements UserDetails {
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private UserType userType;
-
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-  private Account account;
 
   @Column(nullable = false, name = "is_account_non_expired")
   private boolean accountNonExpired = true;

@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,7 @@ public class Account implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID accountId;
 
+    @Setter(AccessLevel.NONE)
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
@@ -43,4 +45,20 @@ public class Account implements Serializable {
 
     @OneToMany(mappedBy = "toAccount", fetch = FetchType.LAZY)
     private final Set<Transaction> toTransactions = new HashSet<>();
+
+    public void updateBalance(BigDecimal newBalance) {
+        this.balance = this.balance.add(newBalance);
+    }
+
+    public boolean canWithdraw(BigDecimal amount) {
+        return amount.compareTo(balance) <= 0;
+    }
+
+    public boolean withdraw(BigDecimal amount) {
+        if (canWithdraw(amount)) {
+            balance = balance.subtract(amount);
+            return true;
+        }
+        return false;
+    }
 }
