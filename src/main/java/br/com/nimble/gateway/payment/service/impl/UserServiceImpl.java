@@ -28,7 +28,9 @@ import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.model.enums.UserStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.UserType;
 import br.com.nimble.gateway.payment.domain.repository.UserRepository;
+import br.com.nimble.gateway.payment.service.AccountService;
 import br.com.nimble.gateway.payment.service.RoleService;
+import br.com.nimble.gateway.payment.service.UserChargeService;
 import br.com.nimble.gateway.payment.service.UserService;
 import br.com.nimble.gateway.payment.util.Role;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +39,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, UserChargeService {
    
     private final UserRepository userRepository;
     private final RoleService roleService;
@@ -77,6 +79,16 @@ public class UserServiceImpl implements UserService {
         log.info("Listing all users");
         return userRepository.findAll(pageable).map(UserMapper::toDto);
     }
+
+    @Override
+    public UserModel findUserByCpf(String cpf) {
+        log.info("Verifying the user's CPF: {}", cpf);
+        return userRepository.findByCpf(cpf).orElseThrow(() -> {
+            log.error("User not found for CPF: {}", cpf);
+            return new ObjectNotFoundException("User not found for CPF: " + cpf);
+        });
+    }
+
 
     @Override
     public UserResponse findUser(UUID userId) {

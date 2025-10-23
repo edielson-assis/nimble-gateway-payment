@@ -11,6 +11,7 @@ import br.com.nimble.gateway.payment.domain.exception.ObjectNotFoundException;
 import br.com.nimble.gateway.payment.domain.model.Account;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.repository.AccountRepository;
+import br.com.nimble.gateway.payment.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 

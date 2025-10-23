@@ -13,4 +13,6 @@ public interface UserRepository extends JpaRepository<UserModel, UUID>, JpaSpeci
 
     @EntityGraph(attributePaths = "permissions", type = EntityGraph.EntityGraphType.FETCH)
     Optional<UserModel> findByEmailOrCpf(String email, String cpf);
+
+    Optional<UserModel> findByCpf(String cpf);
 }

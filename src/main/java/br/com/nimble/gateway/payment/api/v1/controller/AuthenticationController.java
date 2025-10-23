@@ -18,9 +18,9 @@ import br.com.nimble.gateway.payment.api.v1.dto.response.TokenResponse;
 import br.com.nimble.gateway.payment.api.v1.dto.response.UserResponse;
 import br.com.nimble.gateway.payment.service.UserService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthenticationController implements AuthenticationControllerDocs {

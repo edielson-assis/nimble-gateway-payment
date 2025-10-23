@@ -1,4 +1,4 @@
-package br.com.nimble.gateway.payment.service.impl;
+package br.com.nimble.gateway.payment.service;
 
 import java.math.BigDecimal;
 import java.util.UUID;
