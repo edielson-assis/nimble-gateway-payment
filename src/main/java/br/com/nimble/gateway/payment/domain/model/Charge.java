@@ -3,6 +3,8 @@ package br.com.nimble.gateway.payment.domain.model;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import br.com.nimble.gateway.payment.domain.model.enums.ChargeStatus;
@@ -17,6 +19,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -63,4 +66,7 @@ public class Charge implements Serializable {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private final LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "charge", fetch = FetchType.LAZY)
+    private final Set<Transaction> transactions = new HashSet<>();
 }
