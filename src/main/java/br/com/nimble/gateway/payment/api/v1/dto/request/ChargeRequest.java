@@ -11,6 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@Schema(description = "Request DTO for creating a charge.")
 public class ChargeRequest implements Serializable {
     
     @Schema(description = "CPF of the recipient.", example = "123.456.789-00", required = true)

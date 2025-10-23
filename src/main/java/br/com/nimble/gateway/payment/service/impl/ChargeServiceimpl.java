@@ -1,5 +1,9 @@
 package br.com.nimble.gateway.payment.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +34,7 @@ public class ChargeServiceimpl implements ChargeService {
     @Override
     public ChargeResponse createCharge(ChargeRequest chargeRequest) {
         var charge = ChargeMapper.toEntity(chargeRequest);
-        charge.setOriginator(authentication.getCurrentUser());
+        charge.setOriginator(currentUser());
         var cpf = LoginUtils.normalizeCpf(chargeRequest.getRecipientCpf());
         charge.setRecipient(findRecipientByCpf(cpf));
         charge.setStatus(ChargeStatus.PENDING);
@@ -38,6 +42,42 @@ public class ChargeServiceimpl implements ChargeService {
         log.info("Creating charge to recipient's CPF: {}", charge.getRecipient().getCpf());
         chargeRepository.save(charge);
         return ChargeMapper.toDto(charge);
+    }
+
+    @Override
+    public Page<ChargeResponse> listSentCharges(Integer page, Integer size, String direction) {
+        var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
+        var pageable = PageRequest.of(page, size, Sort.by(sortDirection, "originator"));
+        var user = currentUser();
+        log.info("Listing all charges sent by user: {}", user.getCpf());
+        return chargeRepository.findByOriginator(user, pageable).map(ChargeMapper::toDto);
+    }
+
+    @Override
+    public Page<ChargeResponse> listReceivedCharges(Integer page, Integer size, String direction) {
+        var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
+		var pageable = PageRequest.of(page, size, Sort.by(sortDirection, "recipient"));
+        var user = currentUser();
+        log.info("Listing all charges received by user: {}", user.getCpf());
+        return chargeRepository.findByRecipient(user, pageable).map(ChargeMapper::toDto);
+    }
+
+    @Override
+    public Page<ChargeResponse> listReceivedChargesAndStatus(Integer page, Integer size, String direction, String status) {
+        var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
+		var pageable = PageRequest.of(page, size, Sort.by(sortDirection, "recipient"));
+        var user = currentUser();
+        log.info("Listing all charges received by user: {}", user.getCpf());
+        return chargeRepository.findByRecipientAndStatus(user, ChargeStatus.valueOf(status.toUpperCase()), pageable).map(ChargeMapper::toDto);
+    }
+
+    @Override
+    public Page<ChargeResponse> listSentChargesAndStatus(Integer page, Integer size, String direction, String status) {
+        var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
+		var pageable = PageRequest.of(page, size, Sort.by(sortDirection, "recipient"));
+        var user = currentUser();
+        log.info("Listing all charges received by user: {}", user.getCpf());
+        return chargeRepository.findByRecipientAndStatus(user, ChargeStatus.valueOf(status.toUpperCase()), pageable).map(ChargeMapper::toDto);
     }
 
     private UserModel findRecipientByCpf(String cpf) {
@@ -49,5 +89,9 @@ public class ChargeServiceimpl implements ChargeService {
             log.error("The originator cannot be the recipient of the charge");
             throw new ValidationException("The originator cannot be the recipient of the charge");
         }
+    }
+
+    private UserModel currentUser() {
+        return authentication.getCurrentUser();
     }
 }

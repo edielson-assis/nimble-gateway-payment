@@ -1,5 +1,6 @@
 package br.com.nimble.gateway.payment.api.v1.doc;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
 import br.com.nimble.gateway.payment.api.v1.dto.request.ChargeRequest;
@@ -31,4 +32,68 @@ public interface ChargeControllerDocs {
 		}
 	)
     ResponseEntity<ChargeResponse> createCharge(ChargeRequest chargeRequest);
+
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Lists sent charges",
+        description = "Retrieves a paginated list of charges sent by the authenticated user",
+        tags = {"Charges"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Charges retrieved successfully",
+                content = @Content(schema = @Schema(implementation = ChargeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - User not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<Page<ChargeResponse>> listSentCharges(Integer page, Integer size, String direction);
+
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Lists received charges",
+        description = "Retrieves a paginated list of charges received by the authenticated user",
+        tags = {"Charges"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Charges retrieved successfully",
+                content = @Content(schema = @Schema(implementation = ChargeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - User not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<Page<ChargeResponse>> listReceivedCharges(Integer page, Integer size, String direction);
+
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Lists sent charges by status",
+        description = "Retrieves a paginated list of charges sent by the authenticated user filtered by status",
+        tags = {"Charges"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Charges retrieved successfully",
+                content = @Content(schema = @Schema(implementation = ChargeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - User not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<Page<ChargeResponse>> listSentChargesAndStatus(Integer page, Integer size, String direction, String status);
+
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Lists received charges by status",
+        description = "Retrieves a paginated list of charges received by the authenticated user filtered by status",
+        tags = {"Charges"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Charges retrieved successfully",
+                content = @Content(schema = @Schema(implementation = ChargeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - User not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<Page<ChargeResponse>> listReceivedChargesAndStatus(Integer page, Integer size, String direction, String status);
 }

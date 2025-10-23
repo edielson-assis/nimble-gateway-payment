@@ -9,6 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@Schema(description = "Request DTO for updating user password.")
 public class UserPutPasswordRequest implements Serializable {
 
     @Schema(description = "Password of the user.", example = "P@ssw0rd!", required = true)

@@ -50,11 +50,11 @@ public class Charge implements Serializable {
     @Column(name = "payment_method", length = 20)
     private PaymentMethod paymentMethod;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "originator_id", nullable = false)
     private UserModel originator;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "recipient_id", nullable = false)
     private UserModel recipient;
 
