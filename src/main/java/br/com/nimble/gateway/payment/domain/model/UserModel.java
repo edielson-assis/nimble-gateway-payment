@@ -23,6 +23,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
@@ -74,6 +75,12 @@ public class UserModel implements UserDetails {
 
   @Column(nullable = false, name = "is_enabled")
   private boolean enabled = true;
+
+  @OneToMany(mappedBy = "originator", fetch = FetchType.LAZY)
+  private final List<Charge> originatedCharges = new ArrayList<>();
+
+  @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
+  private final List<Charge> receivedCharges = new ArrayList<>();
 
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(name = "user_role", joinColumns = { @JoinColumn(name = "user_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
