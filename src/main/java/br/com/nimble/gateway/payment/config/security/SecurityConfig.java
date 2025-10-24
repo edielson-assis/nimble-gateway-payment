@@ -33,7 +33,7 @@ public class SecurityConfig {
     private static final String[] PUBLIC_METHODS = {"/api/v1/auth/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"};
     private static final String[] ADMIN_MODERATOR_METHODS = {"/api/v1/users"};
     private static final String[] ADMIN_METHODS = {"/api/v1/auth/signup-moderator"};
-    private static final String[] USER_METHODS = {"/api/v1/users/**"};
+    private static final String[] USER_METHODS = {"/api/v1/users/**", "/api/v1/accounts/**", "/api/v1/transactions/**", "/api/v1/charges/**"};
 
     @Bean
     public RoleHierarchy roleHierarchy() {

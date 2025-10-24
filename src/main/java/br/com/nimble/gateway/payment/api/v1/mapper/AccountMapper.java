@@ -1,5 +1,6 @@
 package br.com.nimble.gateway.payment.api.v1.mapper;
 
+import br.com.nimble.gateway.payment.api.v1.dto.response.AccountResponse;
 import br.com.nimble.gateway.payment.domain.model.Account;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
 
@@ -8,9 +9,16 @@ public class AccountMapper {
     private AccountMapper() {}
 
     public static Account toEntity(UserModel user) {
-        Account account = new Account();
+        var account = new Account();
         account.setUser(user);
-        account.updateBalance(account.getBalance());
+        account.deposit(account.getBalance());
         return account;
+    }
+
+    public static AccountResponse toDto(Account account) {
+        var response = new AccountResponse();
+        response.setAccountId(account.getAccountId().toString());
+        response.setBalance(account.getBalance());
+        return response;
     }
 }

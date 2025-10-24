@@ -46,12 +46,8 @@ public class Account implements Serializable {
     @OneToMany(mappedBy = "toAccount", fetch = FetchType.LAZY)
     private final Set<Transaction> toTransactions = new HashSet<>();
 
-    public void updateBalance(BigDecimal newBalance) {
-        this.balance = this.balance.add(newBalance);
-    }
-
-    public boolean canWithdraw(BigDecimal amount) {
-        return amount.compareTo(balance) <= 0;
+    public void deposit(BigDecimal amount) {
+        this.balance = this.balance.add(amount);
     }
 
     public boolean withdraw(BigDecimal amount) {
@@ -60,5 +56,9 @@ public class Account implements Serializable {
             return true;
         }
         return false;
+    }
+
+    private boolean canWithdraw(BigDecimal amount) {
+        return amount.compareTo(balance) <= 0;
     }
 }
