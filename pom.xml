@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>br.com.nimble.gateway</groupId>
-	<artifactId>payment</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>payment</name>
-	<description>Demo project for Spring Boot</description>
+	<artifactId>payment-gateway-nimble</artifactId>
+	<version>1.0.0</version>
+	<name>payment-gateway-nimble</name>
+	<description>Rest Spring Boot App</description>
 	<url/>
 	<licenses>
 		<license/>
