@@ -1,5 +1,7 @@
 package br.com.nimble.gateway.payment.api.v1.doc;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
@@ -32,6 +34,22 @@ public interface ChargeControllerDocs {
 		}
 	)
     ResponseEntity<ChargeResponse> createCharge(ChargeRequest chargeRequest);
+
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Pays a charge using account balance",
+        description = "Marks a charge as paid using the authenticated user's account balance",
+        tags = {"Charges"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Charge paid successfully",
+                content = @Content(schema = @Schema(implementation = ChargeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - Charge not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<ChargeResponse> paidChargeWithBalance(UUID chargeId);
 
     @Operation(
         security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},

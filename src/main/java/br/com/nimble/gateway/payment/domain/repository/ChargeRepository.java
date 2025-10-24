@@ -1,5 +1,6 @@
 package br.com.nimble.gateway.payment.domain.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -25,4 +26,7 @@ public interface ChargeRepository extends JpaRepository<Charge, UUID> {
 
     @Query("SELECT c FROM Charge c WHERE c.recipient = :recipient AND c.status = :status")
     Page<Charge> findByRecipientAndStatus(@Param("recipient") UserModel recipient, @Param("status") ChargeStatus status, Pageable pageable);
+
+    @Query("SELECT c FROM Charge c WHERE c.chargeId = :chargeId AND c.recipient.userId = :recipientId")
+    Optional<Charge> findByChargeIdAndRecipientId(@Param("chargeId") UUID chargeId, @Param("recipientId") UUID recipientId);
 }

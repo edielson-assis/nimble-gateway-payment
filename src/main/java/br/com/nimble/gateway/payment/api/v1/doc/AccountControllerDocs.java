@@ -2,6 +2,7 @@ package br.com.nimble.gateway.payment.api.v1.doc;
 
 import org.springframework.http.ResponseEntity;
 
+import br.com.nimble.gateway.payment.api.v1.dto.request.AccountPutRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.request.AccountRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.AccountResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,5 +47,5 @@ public interface AccountControllerDocs {
             @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
         }
     )
-    ResponseEntity<AccountResponse> withdraw(AccountRequest accountRequest);
+    ResponseEntity<AccountResponse> withdraw(AccountPutRequest accountRequest);
 }

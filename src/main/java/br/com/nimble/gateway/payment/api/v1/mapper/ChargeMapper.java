@@ -8,10 +8,10 @@ public class ChargeMapper {
     
     private ChargeMapper() {}
 
-    public static Charge toEntity(ChargeRequest dto) {
+    public static Charge toEntity(ChargeRequest chargeRequest) {
         var charge = new Charge();
-        charge.setAmount(dto.getAmount());
-        charge.setDescription(dto.getDescription());
+        charge.setAmount(chargeRequest.getAmount());
+        charge.setDescription(chargeRequest.getDescription());
         return charge;
     }
 

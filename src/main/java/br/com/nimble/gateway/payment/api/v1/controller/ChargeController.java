@@ -1,11 +1,14 @@
 package br.com.nimble.gateway.payment.api.v1.controller;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,6 +33,12 @@ public class ChargeController implements ChargeControllerDocs {
             @RequestBody @Valid ChargeRequest chargeRequest) {
         var charge = chargeService.createCharge(chargeRequest);
         return new ResponseEntity<>(charge, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{chargeId}")
+    public ResponseEntity<ChargeResponse> paidChargeWithBalance(@PathVariable UUID chargeId) {
+        var charge = chargeService.paidChargeWithBalance(chargeId);
+        return new ResponseEntity<>(charge, HttpStatus.OK);
     }
 
     @GetMapping("/sent")

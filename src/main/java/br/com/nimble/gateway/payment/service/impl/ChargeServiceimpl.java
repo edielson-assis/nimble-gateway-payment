@@ -1,5 +1,8 @@
 package br.com.nimble.gateway.payment.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -12,9 +15,12 @@ import br.com.nimble.gateway.payment.api.v1.dto.response.ChargeResponse;
 import br.com.nimble.gateway.payment.api.v1.mapper.ChargeMapper;
 import br.com.nimble.gateway.payment.config.security.context.AuthenticatedUserProvider;
 import br.com.nimble.gateway.payment.domain.exception.ValidationException;
+import br.com.nimble.gateway.payment.domain.model.Charge;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.model.enums.ChargeStatus;
+import br.com.nimble.gateway.payment.domain.model.enums.PaymentMethod;
 import br.com.nimble.gateway.payment.domain.repository.ChargeRepository;
+import br.com.nimble.gateway.payment.service.AccountService;
 import br.com.nimble.gateway.payment.service.ChargeService;
 import br.com.nimble.gateway.payment.service.UserChargeService;
 import br.com.nimble.gateway.payment.util.LoginUtils;
@@ -29,6 +35,7 @@ public class ChargeServiceimpl implements ChargeService {
     private final ChargeRepository chargeRepository;
     private final AuthenticatedUserProvider authentication;
     private final UserChargeService userService;
+    private final AccountService accountService;
 
     @Transactional
     @Override
@@ -39,6 +46,21 @@ public class ChargeServiceimpl implements ChargeService {
         charge.setRecipient(findRecipientByCpf(cpf));
         charge.setStatus(ChargeStatus.PENDING);
         validateifOriginatorIsNotRecipient(charge.getOriginator(), charge.getRecipient());
+        log.info("Creating charge to recipient's CPF: {}", charge.getRecipient().getCpf());
+        chargeRepository.save(charge);
+        return ChargeMapper.toDto(charge);
+    }
+
+    @Transactional
+    @Override
+    public ChargeResponse paidChargeWithBalance(UUID chargeId) {
+        var user = findRecipientByCpf(currentUser().getCpf());
+        var charge = findByChargeIdAndRecipientId(chargeId, user.getUserId());
+        VerifyingChargeIsPending(charge);
+        accountService.withdraw(charge.getAmount());
+        charge.setStatus(ChargeStatus.PAID);
+        charge.setPaidAt(LocalDateTime.now());
+        charge.setPaymentMethod(PaymentMethod.BALANCE);
         log.info("Creating charge to recipient's CPF: {}", charge.getRecipient().getCpf());
         chargeRepository.save(charge);
         return ChargeMapper.toDto(charge);
@@ -93,5 +115,20 @@ public class ChargeServiceimpl implements ChargeService {
 
     private UserModel currentUser() {
         return authentication.getCurrentUser();
+    }
+
+    private Charge findByChargeIdAndRecipientId(UUID chargeId, UUID recipientId) {
+        log.info("Searching for charge with ID: {} and recipient ID: {}", chargeId, recipientId);
+        return chargeRepository.findByChargeIdAndRecipientId(chargeId, recipientId).orElseThrow(() -> {
+            log.error("Charge with ID {} and recipient ID {} not found", chargeId, recipientId);
+            return new ValidationException("Charge not found");
+        });
+    }
+
+    private void VerifyingChargeIsPending(Charge charge) {
+        if (charge.getStatus() != ChargeStatus.PENDING) {
+            log.error("Charge with ID {} is not pending", charge.getChargeId());
+            throw new ValidationException("Charge is not pending");
+        }
     }
 }

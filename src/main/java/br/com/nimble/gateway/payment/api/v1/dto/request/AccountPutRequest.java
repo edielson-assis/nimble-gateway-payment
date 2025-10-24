@@ -2,7 +2,6 @@ package br.com.nimble.gateway.payment.api.v1.dto.request;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -12,12 +11,8 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@Schema(description = "Request DTO for account operations such as deposit and withdrawal.")
-public class AccountRequest implements Serializable {
-
-    @Schema(description = "ID of the user.", example = "550e8400-e29b-41d4-a716-446655440000", required = true)
-    @NotNull(message = "User ID is required")
-    private UUID userId;
+@Schema(description = "Request DTO for updating account information.")
+public class AccountPutRequest implements Serializable {
 
     @Schema(description = "Amount to be charged.", example = "150.75", required = true)
     @Positive(message = "Amount must be positive")

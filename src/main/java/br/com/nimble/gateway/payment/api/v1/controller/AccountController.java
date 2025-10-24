@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.nimble.gateway.payment.api.v1.doc.AccountControllerDocs;
+import br.com.nimble.gateway.payment.api.v1.dto.request.AccountPutRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.request.AccountRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.AccountResponse;
 import br.com.nimble.gateway.payment.service.AccountService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -22,15 +24,15 @@ public class AccountController implements AccountControllerDocs {
 
     @PostMapping("/charges")
     public ResponseEntity<AccountResponse> deposit(
-            @RequestBody AccountRequest accountRequest) {
+            @RequestBody @Valid AccountRequest accountRequest) {
         var amount = accountService.deposit(accountRequest);
         return new ResponseEntity<>(amount, HttpStatus.CREATED);
     }
 
     @PostMapping("/withdrawals")
     public ResponseEntity<AccountResponse> withdraw(
-            @RequestBody AccountRequest accountRequest) {
-        var response = accountService.withdraw(accountRequest);
+            @RequestBody @Valid AccountPutRequest accountRequest) {
+        var response = accountService.withdraw(accountRequest.getAmount());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }
