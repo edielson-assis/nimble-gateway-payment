@@ -31,4 +31,20 @@ public interface AccountControllerDocs {
 		}
 	)
     ResponseEntity<AccountResponse> deposit(AccountRequest accountRequest);
+
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Checks account balance",
+        description = "Retrieves the current balance of the user's account",
+        tags = {"Accounts"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Balance retrieved successfully",
+                content = @Content(schema = @Schema(implementation = AccountResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - User not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<AccountResponse> checkBalance();
 }

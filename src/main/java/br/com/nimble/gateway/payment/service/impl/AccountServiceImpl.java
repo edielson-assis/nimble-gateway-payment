@@ -64,6 +64,22 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
         return "Payment of " + amount + " processed successfully.";
     }
 
+    @Transactional
+    @Override
+    public AccountResponse creditBalance(UUID userId, BigDecimal amount) {
+        var account = findAccountById(userId);
+        account.deposit(amount);
+        log.info("Crediting account for userId: {}. New balance: {}", userId, account.getBalance());
+        return AccountMapper.toDto(accountRepository.save(account));
+    }
+
+    @Override
+    public AccountResponse checkBalance() {
+        var account = findAccountById(currentUser());
+        log.info("Checking balance for userId: {}. Current balance: {}", currentUser(), account.getBalance());
+        return AccountMapper.toDto(account);
+    }
+
     private Account findAccountById(UUID accountId) {
         log.info("Verifying the account's Id: {}", accountId);
         return accountRepository.findByUserId(accountId).orElseThrow(() -> {
@@ -74,14 +90,5 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
 
     private UUID currentUser() {
         return authentication.getCurrentUser().getUserId();
-    }
-
-    @Transactional
-    @Override
-    public AccountResponse creditBalance(UUID userId, BigDecimal amount) {
-        var account = findAccountById(userId);
-        account.deposit(amount);
-        log.info("Crediting account for userId: {}. New balance: {}", userId, account.getBalance());
-        return AccountMapper.toDto(accountRepository.save(account));
-    }
+    }  
 }

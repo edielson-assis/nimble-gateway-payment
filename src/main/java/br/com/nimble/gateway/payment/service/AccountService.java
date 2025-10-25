@@ -13,4 +13,6 @@ public interface AccountService {
     AccountResponse deposit(BigDecimal amount);
 
     String payWithBalance(BigDecimal amount);
+
+    AccountResponse checkBalance();
 }
