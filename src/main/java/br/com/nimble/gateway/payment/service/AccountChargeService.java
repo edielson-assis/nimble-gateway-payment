@@ -6,4 +6,6 @@ import java.util.UUID;
 public interface AccountChargeService {
     
     void creditBalance(UUID userId, BigDecimal amount);
+
+    void debitBalance(UUID userId, BigDecimal amount);
 }

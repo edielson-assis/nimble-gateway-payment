@@ -16,6 +16,10 @@ public interface ChargeService {
 
     ChargeResponse paidWithCard(UUID chargeId, CardPaymentRequest card);
 
+    ChargeResponse cancelCardCharge(UUID chargeId);
+
+    ChargeResponse cancelBalanceCharge(UUID chargeId);
+
     Page<ChargeResponse> listSentCharges(Integer page, Integer size, String direction);
 
     Page<ChargeResponse> listReceivedCharges(Integer page, Integer size, String direction);

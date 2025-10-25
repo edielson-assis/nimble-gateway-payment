@@ -70,6 +70,38 @@ public interface ChargeControllerDocs {
 
     @Operation(
         security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Cancels a charge paid using account balance",
+        description = "Cancels a charge previously paid with the authenticated user's account balance and refunds the amount to the payer's account",
+        tags = {"Charges"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Charge paid successfully",
+                content = @Content(schema = @Schema(implementation = ChargeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - Charge not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<ChargeResponse> cancelBalanceCharge(UUID chargeId);
+
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Cancels a charge paid using credit card",
+        description = "Cancels a charge previously paid with credit card. The cancellation is subject to authorization from the external authorizer",
+        tags = {"Charges"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Charge paid successfully",
+                content = @Content(schema = @Schema(implementation = ChargeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - Charge not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<ChargeResponse> cancelCardCharge(UUID chargeId);
+    
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
         summary = "Lists sent charges",
         description = "Retrieves a paginated list of charges sent by the authenticated user",
         tags = {"Charges"},

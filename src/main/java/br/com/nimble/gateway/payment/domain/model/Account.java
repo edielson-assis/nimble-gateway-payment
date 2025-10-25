@@ -50,7 +50,7 @@ public class Account implements Serializable {
         this.balance = this.balance.add(amount);
     }
 
-    public void payWithBalance(BigDecimal amount) {
+    public void debitBalance(BigDecimal amount) {
         this.balance = this.balance.subtract(amount);
     }
 

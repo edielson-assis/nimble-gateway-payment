@@ -20,8 +20,11 @@ import br.com.nimble.gateway.payment.domain.model.Charge;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.model.enums.ChargeStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.PaymentMethod;
+import br.com.nimble.gateway.payment.domain.model.enums.TransactionType;
 import br.com.nimble.gateway.payment.domain.repository.ChargeRepository;
+import br.com.nimble.gateway.payment.domain.strategy.CancellationAction;
 import br.com.nimble.gateway.payment.domain.strategy.PaymentAction;
+import br.com.nimble.gateway.payment.integration.AuthorizerAdapter;
 import br.com.nimble.gateway.payment.service.AccountChargeService;
 import br.com.nimble.gateway.payment.service.AccountService;
 import br.com.nimble.gateway.payment.service.CardPaymentService;
@@ -42,6 +45,7 @@ public class ChargeServiceimpl implements ChargeService {
     private final AccountService accountService;
     private final AccountChargeService accountChargeService;
     private final CardPaymentService cardPaymentService;
+    private final AuthorizerAdapter authorizerAdapter;
 
     @Transactional
     @Override
@@ -75,6 +79,30 @@ public class ChargeServiceimpl implements ChargeService {
     }
 
     @Override
+    public ChargeResponse cancelCardCharge(UUID chargeId) {
+        return cancelCharge(chargeId, charge -> {
+                authorizerAdapter.isAuthorizedTransaction(
+                charge.getChargeId(),
+                charge.getAmount(),
+                TransactionType.REFUND
+            );
+            log.info("Card charge {} refunded successfully", charge.getChargeId());
+        });
+    }
+
+    @Override
+    public ChargeResponse cancelBalanceCharge(UUID chargeId) {
+        return cancelCharge(chargeId, charge -> {
+            var originatorId = charge.getOriginator().getUserId();
+            var recipientId = charge.getRecipient().getUserId();
+            var amount = charge.getAmount();
+            accountChargeService.debitBalance(originatorId, amount);
+            accountChargeService.creditBalance(recipientId, amount);
+            log.info("Balance charge {} refunded successfully", charge.getChargeId());
+        });
+    }
+
+    @Override
     public Page<ChargeResponse> listSentCharges(Integer page, Integer size, String direction) {
         var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
         var pageable = PageRequest.of(page, size, Sort.by(sortDirection, "originator"));
@@ -104,10 +132,10 @@ public class ChargeServiceimpl implements ChargeService {
     @Override
     public Page<ChargeResponse> listSentChargesAndStatus(Integer page, Integer size, String direction, String status) {
         var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
-		var pageable = PageRequest.of(page, size, Sort.by(sortDirection, "recipient"));
+		var pageable = PageRequest.of(page, size, Sort.by(sortDirection, "originator"));
         var user = currentUser();
-        log.info("Listing all charges received by user: {}", user.getCpf());
-        return chargeRepository.findByRecipientAndStatus(user, ChargeStatus.valueOf(status.toUpperCase()), pageable).map(ChargeMapper::toDto);
+        log.info("Listing all charges sent by user: {}", user.getCpf());
+        return chargeRepository.findByOriginatorAndStatus(user, ChargeStatus.valueOf(status.toUpperCase()), pageable).map(ChargeMapper::toDto);
     }
 
     private UserModel findRecipientByCpf(String cpf) {
@@ -133,6 +161,14 @@ public class ChargeServiceimpl implements ChargeService {
         });
     }
 
+    private Charge findByChargeIdAndOriginatortId(UUID chargeId, UUID originatorId) {
+        log.info("Searching for charge with ID: {} and originator ID: {}", chargeId, originatorId);
+        return chargeRepository.findByChargeIdAndOriginatortId(chargeId, originatorId).orElseThrow(() -> {
+            log.error("Charge with ID {} and originator ID {} not found", chargeId, originatorId);
+            return new ValidationException("Charge not found");
+        });
+    }
+
     private void VerifyingChargeIsPending(Charge charge) {
         if (charge.getStatus() != ChargeStatus.PENDING) {
             log.error("Charge with ID {} is not pending", charge.getChargeId());
@@ -150,6 +186,33 @@ public class ChargeServiceimpl implements ChargeService {
         charge.setStatus(ChargeStatus.PAID);
         charge.setPaidAt(LocalDateTime.now());
         log.info("Creating charge to recipient's CPF: {}", charge.getRecipient().getCpf());
+        chargeRepository.save(charge);
+        return ChargeMapper.toDto(charge);
+    }
+
+    @Transactional
+    private ChargeResponse cancelCharge(UUID chargeId, CancellationAction action) {
+        var user = findRecipientByCpf(currentUser().getCpf());
+        var charge = findByChargeIdAndOriginatortId(chargeId, user.getUserId());
+        if (charge.getStatus() == ChargeStatus.CANCELED) {
+            throw new ValidationException("Charge is already canceled.");
+        }
+
+        switch (charge.getStatus()) {
+            case PENDING -> {
+                charge.setStatus(ChargeStatus.CANCELED);
+                charge.setCanceledAt(LocalDateTime.now());
+                log.info("Pending charge {} canceled by user {}", chargeId, user.getCpf());
+            }
+            case PAID -> {
+                // Executa a ação específica do cancelamento (saldo ou cartão)
+                action.execute(charge);
+                charge.setStatus(ChargeStatus.CANCELED);
+                charge.setCanceledAt(LocalDateTime.now());
+                log.info("Paid charge {} canceled by user {}", chargeId, user.getCpf());
+            }
+            default -> throw new ValidationException("Only pending or paid charges can be canceled.");
+        }
         chargeRepository.save(charge);
         return ChargeMapper.toDto(charge);
     }

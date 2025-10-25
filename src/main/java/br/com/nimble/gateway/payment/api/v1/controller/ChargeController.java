@@ -50,6 +50,18 @@ public class ChargeController implements ChargeControllerDocs {
         return new ResponseEntity<>(charge, HttpStatus.OK);
     }
 
+    @PutMapping("/{chargeId}/balance/cancel")
+    public ResponseEntity<ChargeResponse> cancelBalanceCharge(@PathVariable UUID chargeId) {
+        var charge = chargeService.cancelBalanceCharge(chargeId);
+        return new ResponseEntity<>(charge, HttpStatus.OK);
+    }
+
+    @PutMapping("/{chargeId}/card/cancel")
+    public ResponseEntity<ChargeResponse> cancelCardCharge(@PathVariable UUID chargeId) {
+        var charge = chargeService.cancelCardCharge(chargeId);
+        return new ResponseEntity<>(charge, HttpStatus.OK);
+    }
+
     @GetMapping("/sent")
     public ResponseEntity<Page<ChargeResponse>> listSentCharges(
             @RequestParam(defaultValue = "0") Integer page,

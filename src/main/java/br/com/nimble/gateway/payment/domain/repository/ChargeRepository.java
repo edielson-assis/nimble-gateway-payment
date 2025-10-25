@@ -29,4 +29,7 @@ public interface ChargeRepository extends JpaRepository<Charge, UUID> {
 
     @Query("SELECT c FROM Charge c WHERE c.chargeId = :chargeId AND c.recipient.userId = :recipientId")
     Optional<Charge> findByChargeIdAndRecipientId(@Param("chargeId") UUID chargeId, @Param("recipientId") UUID recipientId);
+    
+    @Query("SELECT c FROM Charge c WHERE c.chargeId = :chargeId AND c.originator.userId = :originatorId")
+    Optional<Charge> findByChargeIdAndOriginatortId(@Param("chargeId") UUID chargeId, @Param("originatorId") UUID originatorId);
 }

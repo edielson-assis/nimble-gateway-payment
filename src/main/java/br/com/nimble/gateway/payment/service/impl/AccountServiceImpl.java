@@ -50,18 +50,17 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
 
     @Transactional
     @Override
-    public String payWithBalance(BigDecimal amount) {
+    public void payWithBalance(BigDecimal amount) {
         var account = findAccountById(currentUser());
         if (!account.existsBalance(amount)) {
             log.error("Insufficient funds for payment of amount: {} from accountId: {}", amount, account.getAccountId());
             throw new IllegalArgumentException("Insufficient funds for payment");
         }
-        log.info("Withdrawing amount: {} from accountId: {}. New balance: {}", amount, account.getAccountId(), account.getBalance());
         var accountResponse = AccountMapper.toDto(account);
         authorizerAdapter.isAuthorizedTransaction(accountResponse, amount, TransactionType.PAYMENT);
-        account.payWithBalance(amount);
+        account.debitBalance(amount);
         accountRepository.save(account);
-        return "Payment of " + amount + " processed successfully.";
+        log.info("Withdrawing amount: {} from accountId: {}. New balance: {}", amount, account.getAccountId(), account.getBalance());
     }
 
     @Transactional
@@ -69,8 +68,8 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
     public void creditBalance(UUID userId, BigDecimal amount) {
         var account = findAccountById(userId);
         account.deposit(amount);
-        log.info("Crediting account for userId: {}. New balance: {}", userId, account.getBalance());
         accountRepository.save(account);
+        log.info("Updating account balance for userId: {}. New balance: {}", userId, account.getBalance());
     }
 
     @Override
@@ -78,6 +77,19 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
         var account = findAccountById(currentUser());
         log.info("Checking balance for userId: {}. Current balance: {}", currentUser(), account.getBalance());
         return AccountMapper.toDto(account);
+    }
+
+    @Transactional
+    @Override
+    public void debitBalance(UUID userId, BigDecimal amount) {
+        var account = findAccountById(userId);
+        if (!account.existsBalance(amount)) {
+            log.error("Insufficient funds for user {} to debit {}", userId, amount);
+            throw new IllegalArgumentException("Insufficient funds");
+        }
+        account.debitBalance(amount);
+        accountRepository.save(account);
+        log.info("Debited {} from account of user {}", amount, userId);
     }
 
     private Account findAccountById(UUID accountId) {
