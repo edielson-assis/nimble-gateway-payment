@@ -6,16 +6,15 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.nimble.gateway.payment.api.v1.dto.request.AccountRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.AccountResponse;
-import br.com.nimble.gateway.payment.api.v1.dto.response.AuthorizerResponse;
 import br.com.nimble.gateway.payment.api.v1.mapper.AccountMapper;
 import br.com.nimble.gateway.payment.config.security.context.AuthenticatedUserProvider;
 import br.com.nimble.gateway.payment.domain.exception.ObjectNotFoundException;
 import br.com.nimble.gateway.payment.domain.model.Account;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
+import br.com.nimble.gateway.payment.domain.model.enums.TransactionType;
 import br.com.nimble.gateway.payment.domain.repository.AccountRepository;
-import br.com.nimble.gateway.payment.integration.AuthorizerService;
+import br.com.nimble.gateway.payment.integration.AuthorizerAdapter;
 import br.com.nimble.gateway.payment.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -26,12 +25,12 @@ import lombok.extern.log4j.Log4j2;
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
-    private final AuthorizerService authorizerService;
+    private final AuthorizerAdapter authorizerAdapter;
     private final AuthenticatedUserProvider authentication;
 
     @Transactional
     @Override
-    public Account createForUser(UserModel user) {
+    public Account createAccount(UserModel user) {
         Account account = AccountMapper.toEntity(user);
         log.info("Creating account for userId: {}", user.getUserId());
         return accountRepository.save(account);
@@ -39,27 +38,29 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional
     @Override
-    public AccountResponse deposit(AccountRequest accountRequest) {
-        var account = findAccountById(accountRequest.getUserId());
-        account.deposit(accountRequest.getAmount());
-        isAuthorizedTransaction();
-        log.info("Updating account balance for userId: {}. New balance: {}", accountRequest.getUserId(), account.getBalance());
+    public AccountResponse deposit(BigDecimal amount) {
+        var account = findAccountById(currentUser());
+        var accountResponse = AccountMapper.toDto(account);
+        authorizerAdapter.isAuthorizedTransaction(accountResponse, amount, TransactionType.DEPOSIT);
+        account.deposit(amount);
+        log.info("Updating account balance for userId: {}. New balance: {}", currentUser(), account.getBalance());
         accountRepository.save(account);
-        return AccountMapper.toDto(account);
+        return accountResponse;
     }
 
     @Transactional
     @Override
-    public AccountResponse withdraw(BigDecimal amount) {
-        var account = findAccountById(authentication.getCurrentUser().getUserId());
-        if (!account.withdraw(amount)) {
-            log.error("Insufficient funds for withdrawal of amount: {} from accountId: {}", amount, account.getAccountId());
-            throw new IllegalArgumentException("Insufficient funds for withdrawal");
+    public String payWithBalance(BigDecimal amount) {
+        var account = findAccountById(currentUser());
+        if (!account.payWithBalance(amount)) {
+            log.error("Insufficient funds for payment of amount: {} from accountId: {}", amount, account.getAccountId());
+            throw new IllegalArgumentException("Insufficient funds for payment");
         }
         log.info("Withdrawing amount: {} from accountId: {}. New balance: {}", amount, account.getAccountId(), account.getBalance());
-        isAuthorizedTransaction();
+        var accountResponse = AccountMapper.toDto(account);
+        authorizerAdapter.isAuthorizedTransaction(accountResponse, amount, TransactionType.PAYMENT);
         accountRepository.save(account);
-        return AccountMapper.toDto(account);
+        return "Payment of " + amount + " processed successfully.";
     }
 
     private Account findAccountById(UUID accountId) {
@@ -70,12 +71,7 @@ public class AccountServiceImpl implements AccountService {
         });
     }
 
-    private AuthorizerResponse isAuthorizedTransaction() {
-        var authorized = authorizerService.authorizeTransaction();
-        if (!authorized.data().authorized()) {
-            log.info("Transaction not authorized by external service.");
-            throw new IllegalArgumentException("Transaction not authorized");
-        }
-        return authorized;
+    private UUID currentUser() {
+        return authentication.getCurrentUser().getUserId();
     }
 }

@@ -146,7 +146,7 @@ public class UserServiceImpl implements UserService, UserChargeService {
     @Transactional
     private UserResponse saveUser(UserModel userModel) {
         var user = userRepository.save(userModel);
-        accountService.createForUser(user);
+        accountService.createAccount(user);
         return UserMapper.toDto(user);
     }
 

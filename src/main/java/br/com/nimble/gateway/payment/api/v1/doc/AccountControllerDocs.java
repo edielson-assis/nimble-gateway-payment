@@ -2,7 +2,6 @@ package br.com.nimble.gateway.payment.api.v1.doc;
 
 import org.springframework.http.ResponseEntity;
 
-import br.com.nimble.gateway.payment.api.v1.dto.request.AccountPutRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.request.AccountRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.AccountResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,20 +31,4 @@ public interface AccountControllerDocs {
 		}
 	)
     ResponseEntity<AccountResponse> deposit(AccountRequest accountRequest);
-
-    @Operation(
-        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
-        summary = "Withdraws amount from account",
-        description = "Withdraws a specified amount from the user's account",
-        tags = {"Accounts"},
-        responses = {
-            @ApiResponse(responseCode = "201", description = "Withdrawal successful",
-                content = @Content(schema = @Schema(implementation = AccountResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
-            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
-            @ApiResponse(responseCode = "404", description = "Not found - User not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
-        }
-    )
-    ResponseEntity<AccountResponse> withdraw(AccountPutRequest accountRequest);
 }

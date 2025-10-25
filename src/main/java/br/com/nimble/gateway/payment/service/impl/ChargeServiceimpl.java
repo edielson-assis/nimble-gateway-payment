@@ -57,7 +57,7 @@ public class ChargeServiceimpl implements ChargeService {
         var user = findRecipientByCpf(currentUser().getCpf());
         var charge = findByChargeIdAndRecipientId(chargeId, user.getUserId());
         VerifyingChargeIsPending(charge);
-        accountService.withdraw(charge.getAmount());
+        accountService.payWithBalance(charge.getAmount());
         charge.setStatus(ChargeStatus.PAID);
         charge.setPaidAt(LocalDateTime.now());
         charge.setPaymentMethod(PaymentMethod.BALANCE);
