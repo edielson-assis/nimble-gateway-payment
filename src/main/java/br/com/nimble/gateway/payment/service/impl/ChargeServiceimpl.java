@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.nimble.gateway.payment.api.v1.dto.request.CardPaymentRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.request.ChargeRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.ChargeResponse;
 import br.com.nimble.gateway.payment.api.v1.mapper.ChargeMapper;
@@ -20,8 +21,10 @@ import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.model.enums.ChargeStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.PaymentMethod;
 import br.com.nimble.gateway.payment.domain.repository.ChargeRepository;
+import br.com.nimble.gateway.payment.domain.strategy.PaymentAction;
 import br.com.nimble.gateway.payment.service.AccountChargeService;
 import br.com.nimble.gateway.payment.service.AccountService;
+import br.com.nimble.gateway.payment.service.CardPaymentService;
 import br.com.nimble.gateway.payment.service.ChargeService;
 import br.com.nimble.gateway.payment.service.UserChargeService;
 import br.com.nimble.gateway.payment.util.LoginUtils;
@@ -38,6 +41,7 @@ public class ChargeServiceimpl implements ChargeService {
     private final UserChargeService userService;
     private final AccountService accountService;
     private final AccountChargeService accountChargeService;
+    private final CardPaymentService cardPaymentService;
 
     @Transactional
     @Override
@@ -53,20 +57,21 @@ public class ChargeServiceimpl implements ChargeService {
         return ChargeMapper.toDto(charge);
     }
 
-    @Transactional
     @Override
-    public ChargeResponse paidChargeWithBalance(UUID chargeId) {
-        var user = findRecipientByCpf(currentUser().getCpf());
-        var charge = findByChargeIdAndRecipientId(chargeId, user.getUserId());
-        VerifyingChargeIsPending(charge);
-        accountService.payWithBalance(charge.getAmount());
-        accountChargeService.creditBalance(charge.getOriginator().getUserId(), charge.getAmount());
-        charge.setStatus(ChargeStatus.PAID);
-        charge.setPaidAt(LocalDateTime.now());
-        charge.setPaymentMethod(PaymentMethod.BALANCE);
-        log.info("Creating charge to recipient's CPF: {}", charge.getRecipient().getCpf());
-        chargeRepository.save(charge);
-        return ChargeMapper.toDto(charge);
+    public ChargeResponse paidWithBalance(UUID chargeId) {
+        return payCharge(chargeId, charge -> {
+            accountService.payWithBalance(charge.getAmount());
+            accountChargeService.creditBalance(charge.getOriginator().getUserId(), charge.getAmount());
+            charge.setPaymentMethod(PaymentMethod.BALANCE);
+        });
+    }
+
+    @Override
+    public ChargeResponse paidWithCard(UUID chargeId, CardPaymentRequest card) {
+        return payCharge(chargeId, charge -> {
+            cardPaymentService.processCardPayment(card, charge);
+            charge.setPaymentMethod(PaymentMethod.CARD);
+        });
     }
 
     @Override
@@ -133,5 +138,19 @@ public class ChargeServiceimpl implements ChargeService {
             log.error("Charge with ID {} is not pending", charge.getChargeId());
             throw new ValidationException("Charge is not pending");
         }
+    }
+
+    @Transactional
+    private ChargeResponse payCharge(UUID chargeId, PaymentAction action) {
+        var user = findRecipientByCpf(currentUser().getCpf());
+        var charge = findByChargeIdAndRecipientId(chargeId, user.getUserId());
+        VerifyingChargeIsPending(charge);
+        // Executa a ação específica do pagamento (saldo ou cartão)
+        action.execute(charge);
+        charge.setStatus(ChargeStatus.PAID);
+        charge.setPaidAt(LocalDateTime.now());
+        log.info("Creating charge to recipient's CPF: {}", charge.getRecipient().getCpf());
+        chargeRepository.save(charge);
+        return ChargeMapper.toDto(charge);
     }
 }

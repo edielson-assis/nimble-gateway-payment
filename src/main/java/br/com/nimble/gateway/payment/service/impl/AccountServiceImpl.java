@@ -32,7 +32,7 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
     @Transactional
     @Override
     public Account createAccount(UserModel user) {
-        Account account = AccountMapper.toEntity(user);
+        var account = AccountMapper.toEntity(user);
         log.info("Creating account for userId: {}", user.getUserId());
         return accountRepository.save(account);
     }
@@ -66,11 +66,11 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
 
     @Transactional
     @Override
-    public AccountResponse creditBalance(UUID userId, BigDecimal amount) {
+    public void creditBalance(UUID userId, BigDecimal amount) {
         var account = findAccountById(userId);
         account.deposit(amount);
         log.info("Crediting account for userId: {}. New balance: {}", userId, account.getBalance());
-        return AccountMapper.toDto(accountRepository.save(account));
+        accountRepository.save(account);
     }
 
     @Override

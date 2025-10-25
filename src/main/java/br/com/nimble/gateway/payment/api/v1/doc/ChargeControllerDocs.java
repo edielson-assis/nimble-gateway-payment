@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
+import br.com.nimble.gateway.payment.api.v1.dto.request.CardPaymentRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.request.ChargeRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.ChargeResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +50,23 @@ public interface ChargeControllerDocs {
             @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
         }
     )
-    ResponseEntity<ChargeResponse> paidChargeWithBalance(UUID chargeId);
+    ResponseEntity<ChargeResponse> paidWithBalance(UUID chargeId);
+
+    @Operation(
+        security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},
+        summary = "Pays a charge using credit card",
+        description = "Marks a charge as paid using the authenticated user's credit card",
+        tags = {"Charges"},
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Charge paid successfully",
+                content = @Content(schema = @Schema(implementation = ChargeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - Something is wrong with the request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - You do not have permission to access this resource",  content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not found - Charge not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - Server error", content = @Content)
+        }
+    )
+    ResponseEntity<ChargeResponse> paidWithCard(UUID chargeId, CardPaymentRequest card);
 
     @Operation(
         security = {@SecurityRequirement(name = SECURITY_SCHEME_KEY)},

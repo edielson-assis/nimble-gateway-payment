@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 
+import br.com.nimble.gateway.payment.api.v1.dto.request.CardPaymentRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.request.ChargeRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.ChargeResponse;
 
@@ -11,7 +12,9 @@ public interface ChargeService {
 
     ChargeResponse createCharge(ChargeRequest chargeRequest);
 
-    ChargeResponse paidChargeWithBalance(UUID chargeId);
+    ChargeResponse paidWithBalance(UUID chargeId);
+
+    ChargeResponse paidWithCard(UUID chargeId, CardPaymentRequest card);
 
     Page<ChargeResponse> listSentCharges(Integer page, Integer size, String direction);
 
