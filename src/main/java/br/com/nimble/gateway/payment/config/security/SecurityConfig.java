@@ -2,7 +2,6 @@ package br.com.nimble.gateway.payment.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,14 +25,9 @@ public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
     private final CorsConfig corsConfig;
-
-    private static final String ADMIN = "ADMIN";
-    private static final String MODERATOR = "MODERATOR";
     private static final String USER = "USER";
     private static final String[] PUBLIC_METHODS = {"/api/v1/auth/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"};
-    private static final String[] ADMIN_MODERATOR_METHODS = {"/api/v1/users"};
-    private static final String[] ADMIN_METHODS = {"/api/v1/auth/signup-moderator"};
-    private static final String[] USER_METHODS = {"/api/v1/users/**", "/api/v1/accounts/**", "/api/v1/transactions/**", "/api/v1/charges/**"};
+    private static final String[] USER_METHODS = {"/api/v1/accounts/**", "/api/v1/transactions/**", "/api/v1/charges/**"};
 
     @Bean
     public RoleHierarchy roleHierarchy() {
@@ -60,8 +54,6 @@ public class SecurityConfig {
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
                     .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                            .requestMatchers(HttpMethod.POST, ADMIN_METHODS).hasRole(ADMIN)
-                            .requestMatchers(HttpMethod.GET, ADMIN_MODERATOR_METHODS).hasRole(MODERATOR)
                             .requestMatchers(USER_METHODS).hasRole(USER)
                             .requestMatchers(PUBLIC_METHODS).permitAll()
                             .anyRequest().authenticated())

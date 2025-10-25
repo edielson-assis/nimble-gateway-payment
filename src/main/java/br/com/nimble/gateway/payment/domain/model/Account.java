@@ -50,15 +50,11 @@ public class Account implements Serializable {
         this.balance = this.balance.add(amount);
     }
 
-    public boolean payWithBalance(BigDecimal amount) {
-        if (canWithBalance(amount)) {
-            balance = balance.subtract(amount);
-            return true;
-        }
-        return false;
+    public void payWithBalance(BigDecimal amount) {
+        this.balance = this.balance.subtract(amount);
     }
 
-    private boolean canWithBalance(BigDecimal amount) {
-        return amount.compareTo(balance) <= 0;
+    public boolean existsBalance(BigDecimal amount) {
+        return amount.compareTo(this.balance) <= 0;
     }
 }

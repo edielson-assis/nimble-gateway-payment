@@ -30,15 +30,8 @@ public class AuthenticationController implements AuthenticationControllerDocs {
     @PostMapping("/signup")
     public ResponseEntity<UserResponse> signup(
             @RequestBody @Valid UserSignupRequest userRequest) {
-        var user = userService.saveCommonUser(userRequest);
+        var user = userService.saveUser(userRequest);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
-    }
-
-    @PostMapping("/signup-moderator")
-    public ResponseEntity<UserResponse> signupModerator(
-            @RequestBody @Valid UserSignupRequest userRequest) {
-        var moderator = userService.saveModerator(userRequest);
-        return new ResponseEntity<>(moderator, HttpStatus.CREATED);
     }
 
 	@PostMapping(path = "/signin")	

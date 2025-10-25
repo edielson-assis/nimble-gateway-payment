@@ -20,6 +20,7 @@ import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.model.enums.ChargeStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.PaymentMethod;
 import br.com.nimble.gateway.payment.domain.repository.ChargeRepository;
+import br.com.nimble.gateway.payment.service.AccountChargeService;
 import br.com.nimble.gateway.payment.service.AccountService;
 import br.com.nimble.gateway.payment.service.ChargeService;
 import br.com.nimble.gateway.payment.service.UserChargeService;
@@ -36,6 +37,7 @@ public class ChargeServiceimpl implements ChargeService {
     private final AuthenticatedUserProvider authentication;
     private final UserChargeService userService;
     private final AccountService accountService;
+    private final AccountChargeService accountChargeService;
 
     @Transactional
     @Override
@@ -58,6 +60,7 @@ public class ChargeServiceimpl implements ChargeService {
         var charge = findByChargeIdAndRecipientId(chargeId, user.getUserId());
         VerifyingChargeIsPending(charge);
         accountService.payWithBalance(charge.getAmount());
+        accountChargeService.creditBalance(charge.getOriginator().getUserId(), charge.getAmount());
         charge.setStatus(ChargeStatus.PAID);
         charge.setPaidAt(LocalDateTime.now());
         charge.setPaymentMethod(PaymentMethod.BALANCE);

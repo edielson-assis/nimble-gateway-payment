@@ -50,3 +50,7 @@ springdoc:
   server:
     url: ${SWAGGER_SERVER_URL:http://localhost:${SERVER_PORT:8080}}
     description: ${SERVER_DESCRIPTION:Development server}
+
+# Authorizer service settings
+authorizer:
+  url: ${AUTHORIZER_URL:https://zsy6tx7aql.execute-api.sa-east-1.amazonaws.com/authorizer}

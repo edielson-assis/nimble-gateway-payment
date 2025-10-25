@@ -69,3 +69,7 @@ springdoc:
   server:
     url: ${SWAGGER_SERVER_URL}
     description: ${SERVER_DESCRIPTION:Production server}
+
+# Authorizer service settings
+authorizer:
+  url: ${AUTHORIZER_URL}
