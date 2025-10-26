@@ -12,11 +12,13 @@ import br.com.nimble.gateway.payment.config.security.context.AuthenticatedUserPr
 import br.com.nimble.gateway.payment.domain.exception.ObjectNotFoundException;
 import br.com.nimble.gateway.payment.domain.model.Account;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
+import br.com.nimble.gateway.payment.domain.model.enums.TransactionStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.TransactionType;
 import br.com.nimble.gateway.payment.domain.repository.AccountRepository;
 import br.com.nimble.gateway.payment.integration.AuthorizerAdapter;
 import br.com.nimble.gateway.payment.service.AccountChargeService;
 import br.com.nimble.gateway.payment.service.AccountService;
+import br.com.nimble.gateway.payment.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -28,6 +30,7 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
     private final AccountRepository accountRepository;
     private final AuthorizerAdapter authorizerAdapter;
     private final AuthenticatedUserProvider authentication;
+    private final TransactionService transactionService;
 
     @Transactional
     @Override
@@ -44,6 +47,12 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
         var accountResponse = AccountMapper.toDto(account);
         authorizerAdapter.isAuthorizedTransaction(accountResponse, amount, TransactionType.DEPOSIT);
         account.deposit(amount);
+        transactionService.registerDeposit(
+            amount, 
+            account, 
+            TransactionType.DEPOSIT,
+            TransactionStatus.SUCCESS
+        );
         log.info("Updating account balance for userId: {}. New balance: {}", currentUser(), account.getBalance());
         return AccountMapper.toDto(accountRepository.save(account));
     }
@@ -92,7 +101,8 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
         log.info("Debited {} from account of user {}", amount, userId);
     }
 
-    private Account findAccountById(UUID accountId) {
+    @Override
+    public Account findAccountById(UUID accountId) {
         log.info("Verifying the account's Id: {}", accountId);
         return accountRepository.findByUserId(accountId).orElseThrow(() -> {
             log.error("Account not found for id: {}", accountId);

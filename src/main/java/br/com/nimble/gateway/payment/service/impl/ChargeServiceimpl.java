@@ -15,11 +15,13 @@ import br.com.nimble.gateway.payment.api.v1.dto.request.ChargeRequest;
 import br.com.nimble.gateway.payment.api.v1.dto.response.ChargeResponse;
 import br.com.nimble.gateway.payment.api.v1.mapper.ChargeMapper;
 import br.com.nimble.gateway.payment.config.security.context.AuthenticatedUserProvider;
+import br.com.nimble.gateway.payment.domain.exception.ObjectNotFoundException;
 import br.com.nimble.gateway.payment.domain.exception.ValidationException;
 import br.com.nimble.gateway.payment.domain.model.Charge;
 import br.com.nimble.gateway.payment.domain.model.UserModel;
 import br.com.nimble.gateway.payment.domain.model.enums.ChargeStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.PaymentMethod;
+import br.com.nimble.gateway.payment.domain.model.enums.TransactionStatus;
 import br.com.nimble.gateway.payment.domain.model.enums.TransactionType;
 import br.com.nimble.gateway.payment.domain.repository.ChargeRepository;
 import br.com.nimble.gateway.payment.domain.strategy.CancellationAction;
@@ -29,6 +31,7 @@ import br.com.nimble.gateway.payment.service.AccountChargeService;
 import br.com.nimble.gateway.payment.service.AccountService;
 import br.com.nimble.gateway.payment.service.CardPaymentService;
 import br.com.nimble.gateway.payment.service.ChargeService;
+import br.com.nimble.gateway.payment.service.TransactionService;
 import br.com.nimble.gateway.payment.service.UserChargeService;
 import br.com.nimble.gateway.payment.util.LoginUtils;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +49,7 @@ public class ChargeServiceimpl implements ChargeService {
     private final AccountChargeService accountChargeService;
     private final CardPaymentService cardPaymentService;
     private final AuthorizerAdapter authorizerAdapter;
+    private final TransactionService transactionService;
 
     @Transactional
     @Override
@@ -64,27 +68,55 @@ public class ChargeServiceimpl implements ChargeService {
     @Override
     public ChargeResponse paidWithBalance(UUID chargeId) {
         return payCharge(chargeId, charge -> {
-            accountService.payWithBalance(charge.getAmount());
-            accountChargeService.creditBalance(charge.getOriginator().getUserId(), charge.getAmount());
+            var originatorId = charge.getOriginator().getUserId();
+            var recipientId = charge.getRecipient().getUserId();
+            var amount = charge.getAmount();
+            accountService.payWithBalance(amount);
+            accountChargeService.creditBalance(originatorId, amount);
             charge.setPaymentMethod(PaymentMethod.BALANCE);
+
+            var recipient = accountChargeService.findAccountById(recipientId);
+            var originator = accountChargeService.findAccountById(originatorId);
+            transactionService.registerBalancePaid(
+                amount, 
+                recipient, 
+                originator, 
+                charge, 
+                TransactionType.PAYMENT,
+                TransactionStatus.SUCCESS
+            );
         });
     }
 
     @Override
     public ChargeResponse paidWithCard(UUID chargeId, CardPaymentRequest card) {
         return payCharge(chargeId, charge -> {
-            cardPaymentService.processCardPayment(card, charge);
+            var cardModel = cardPaymentService.processCardPayment(card, charge);
             charge.setPaymentMethod(PaymentMethod.CARD);
+
+            transactionService.registerCardPaid(
+                charge.getAmount(), 
+                charge,
+                cardModel, 
+                TransactionType.PAYMENT,
+                TransactionStatus.SUCCESS
+            );
         });
     }
 
     @Override
     public ChargeResponse cancelCardCharge(UUID chargeId) {
-        return cancelCharge(chargeId, charge -> {
+        return cancelCharge(chargeId, PaymentMethod.CARD, charge -> {
                 authorizerAdapter.isAuthorizedTransaction(
                 charge.getChargeId(),
                 charge.getAmount(),
                 TransactionType.REFUND
+            );
+            transactionService.registerCardRefund(
+                charge.getAmount(), 
+                charge, 
+                TransactionType.REFUND,
+                TransactionStatus.SUCCESS
             );
             log.info("Card charge {} refunded successfully", charge.getChargeId());
         });
@@ -92,12 +124,23 @@ public class ChargeServiceimpl implements ChargeService {
 
     @Override
     public ChargeResponse cancelBalanceCharge(UUID chargeId) {
-        return cancelCharge(chargeId, charge -> {
+        return cancelCharge(chargeId, PaymentMethod.BALANCE, charge -> {
             var originatorId = charge.getOriginator().getUserId();
             var recipientId = charge.getRecipient().getUserId();
             var amount = charge.getAmount();
             accountChargeService.debitBalance(originatorId, amount);
             accountChargeService.creditBalance(recipientId, amount);
+
+            var recipient = accountChargeService.findAccountById(recipientId);
+            var originator = accountChargeService.findAccountById(originatorId);
+            transactionService.registerBalanceRefund(
+                amount, 
+                originator, 
+                recipient, 
+                charge, 
+                TransactionType.REFUND,
+                TransactionStatus.SUCCESS
+            );
             log.info("Balance charge {} refunded successfully", charge.getChargeId());
         });
     }
@@ -157,7 +200,7 @@ public class ChargeServiceimpl implements ChargeService {
         log.info("Searching for charge with ID: {} and recipient ID: {}", chargeId, recipientId);
         return chargeRepository.findByChargeIdAndRecipientId(chargeId, recipientId).orElseThrow(() -> {
             log.error("Charge with ID {} and recipient ID {} not found", chargeId, recipientId);
-            return new ValidationException("Charge not found");
+            return new ObjectNotFoundException("Charge not found");
         });
     }
 
@@ -165,7 +208,7 @@ public class ChargeServiceimpl implements ChargeService {
         log.info("Searching for charge with ID: {} and originator ID: {}", chargeId, originatorId);
         return chargeRepository.findByChargeIdAndOriginatortId(chargeId, originatorId).orElseThrow(() -> {
             log.error("Charge with ID {} and originator ID {} not found", chargeId, originatorId);
-            return new ValidationException("Charge not found");
+            return new ObjectNotFoundException("Charge not found");
         });
     }
 
@@ -191,7 +234,7 @@ public class ChargeServiceimpl implements ChargeService {
     }
 
     @Transactional
-    private ChargeResponse cancelCharge(UUID chargeId, CancellationAction action) {
+    private ChargeResponse cancelCharge(UUID chargeId, PaymentMethod paymentMethod, CancellationAction action) {
         var user = findRecipientByCpf(currentUser().getCpf());
         var charge = findByChargeIdAndOriginatortId(chargeId, user.getUserId());
         if (charge.getStatus() == ChargeStatus.CANCELED) {
@@ -205,6 +248,7 @@ public class ChargeServiceimpl implements ChargeService {
                 log.info("Pending charge {} canceled by user {}", chargeId, user.getCpf());
             }
             case PAID -> {
+                validatePaymentMethod(charge, paymentMethod);
                 // Executa a ação específica do cancelamento (saldo ou cartão)
                 action.execute(charge);
                 charge.setStatus(ChargeStatus.CANCELED);
@@ -215,5 +259,12 @@ public class ChargeServiceimpl implements ChargeService {
         }
         chargeRepository.save(charge);
         return ChargeMapper.toDto(charge);
+    }
+
+    private void validatePaymentMethod(Charge charge, PaymentMethod method) {
+        if (charge.getPaymentMethod() != method) {
+            throw new ValidationException("Invalid cancellation method. This charge was paid with " + charge.getPaymentMethod()
+            );
+        }
     }
 }

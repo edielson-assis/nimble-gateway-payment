@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.nimble.gateway.payment.api.v1.dto.request.CardPaymentRequest;
 import br.com.nimble.gateway.payment.api.v1.mapper.CardPaymentMapper;
+import br.com.nimble.gateway.payment.domain.model.CardPayment;
 import br.com.nimble.gateway.payment.domain.model.Charge;
 import br.com.nimble.gateway.payment.domain.model.enums.TransactionType;
 import br.com.nimble.gateway.payment.domain.repository.CardPaymentRepository;
@@ -21,10 +22,10 @@ public class CardPaymentServiceImpl implements CardPaymentService {
     private final AuthorizerAdapter authorizerAdapter;
 
     @Override
-    public void processCardPayment(CardPaymentRequest request, Charge charge) {
+    public CardPayment processCardPayment(CardPaymentRequest request, Charge charge) {
         var card = CardPaymentMapper.toEntity(request, charge);
         authorizerAdapter.isAuthorizedTransaction(card, charge.getAmount(), TransactionType.PAYMENT);
         log.info("Creating card payment for chargId: {}", charge.getChargeId());
-        cardPaymentRepository.save(card);
+        return cardPaymentRepository.save(card);
     }
 }
