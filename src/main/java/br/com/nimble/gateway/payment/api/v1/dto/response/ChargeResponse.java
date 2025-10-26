@@ -1,5 +1,6 @@
 package br.com.nimble.gateway.payment.api.v1.dto.response;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ import lombok.Setter;
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Represents a Charge")
-public class ChargeResponse {
+public class ChargeResponse implements Serializable {
 
     @Schema(description = "Unique identifier of the charge", example = "1")
     private UUID chargeId;
@@ -25,7 +26,7 @@ public class ChargeResponse {
     private UserResponse recipient;
 
     @Schema(description = "Status of the charge", example = "PENDING")
-    private String status;
+    private String chargeStatus;
 
     @Schema(description = "Amount of the charge", example = "100.00")
     private String amount;

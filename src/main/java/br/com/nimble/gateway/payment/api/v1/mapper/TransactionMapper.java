@@ -2,6 +2,7 @@ package br.com.nimble.gateway.payment.api.v1.mapper;
 
 import java.math.BigDecimal;
 
+import br.com.nimble.gateway.payment.api.v1.dto.response.TransactionResponse;
 import br.com.nimble.gateway.payment.domain.model.Account;
 import br.com.nimble.gateway.payment.domain.model.Charge;
 import br.com.nimble.gateway.payment.domain.model.Transaction;
@@ -49,5 +50,18 @@ public class TransactionMapper {
         transaction.setStatus(status);
         transaction.setToAccount(account);
         return transaction;
+    }
+
+    public static TransactionResponse toDto(Transaction transaction) {
+        var transactionResponse = new TransactionResponse();
+        transactionResponse.setTransactionId(transaction.getTransactionId());
+        transactionResponse.setType(transaction.getType());
+        transactionResponse.setAmount(transaction.getAmount());
+        transactionResponse.setFromAccount(AccountMapper.toSummaryDto(transaction.getFromAccount()));
+        transactionResponse.setToAccount(AccountMapper.toSummaryDto(transaction.getToAccount()));
+        transactionResponse.setCharge(ChargeMapper.toDto(transaction.getCharge()));
+        transactionResponse.setStatus(transaction.getStatus());
+        transactionResponse.setCreatedAt(transaction.getCreatedAt());
+        return transactionResponse;
     }
 }

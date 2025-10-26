@@ -20,7 +20,7 @@ public class ChargeMapper {
         ChargeResponse.setChargeId(charge.getChargeId());
         ChargeResponse.setAmount(charge.getAmount().toString());
         ChargeResponse.setDescription(charge.getDescription());
-        ChargeResponse.setStatus(charge.getStatus().name());
+        ChargeResponse.setChargeStatus(charge.getStatus().name());
         ChargeResponse.setCreatedAt(charge.getCreatedAt());
         ChargeResponse.setOriginator(UserMapper.toDto(charge.getOriginator()));
         ChargeResponse.setRecipient(UserMapper.toDto(charge.getRecipient()));
