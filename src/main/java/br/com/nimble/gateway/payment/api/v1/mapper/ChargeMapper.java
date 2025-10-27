@@ -18,9 +18,9 @@ public class ChargeMapper {
     public static ChargeResponse toDto(Charge charge) {
         var ChargeResponse = new ChargeResponse();
         ChargeResponse.setChargeId(charge.getChargeId());
-        ChargeResponse.setAmount(charge.getAmount().toString());
+        ChargeResponse.setAmount(charge.getAmount());
         ChargeResponse.setDescription(charge.getDescription());
-        ChargeResponse.setChargeStatus(charge.getStatus().name());
+        ChargeResponse.setChargeStatus(charge.getStatus());
         ChargeResponse.setCreatedAt(charge.getCreatedAt());
         ChargeResponse.setOriginator(UserMapper.toDto(charge.getOriginator()));
         ChargeResponse.setRecipient(UserMapper.toDto(charge.getRecipient()));

@@ -1,11 +1,13 @@
 package br.com.nimble.gateway.payment.api.v1.dto.response;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import br.com.nimble.gateway.payment.domain.model.enums.ChargeStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,10 +28,10 @@ public class ChargeResponse implements Serializable {
     private UserResponse recipient;
 
     @Schema(description = "Status of the charge", example = "PENDING")
-    private String chargeStatus;
+    private ChargeStatus chargeStatus;
 
     @Schema(description = "Amount of the charge", example = "100.00")
-    private String amount;
+    private BigDecimal amount;
 
     @Schema(description = "Description of the charge", example = "Payment for order #12345")
     private String description;
