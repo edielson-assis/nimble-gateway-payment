@@ -49,7 +49,7 @@ import br.com.nimble.gateway.payment.service.TransactionService;
 import br.com.nimble.gateway.payment.service.UserChargeService;
 
 @ExtendWith(MockitoExtension.class)
-class ChargeServiceimplTest {
+class ChargeServiceImplTest {
 
     @Mock private ChargeRepository chargeRepository;
     @Mock private AuthenticatedUserProvider authentication;

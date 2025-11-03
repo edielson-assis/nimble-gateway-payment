@@ -45,7 +45,7 @@ public class ChargeController implements ChargeControllerDocs {
     @PutMapping("/{chargeId}/card")
     public ResponseEntity<ChargeResponse> paidWithCard(
             @PathVariable UUID chargeId,
-            @RequestBody CardPaymentRequest card) {
+            @RequestBody @Valid CardPaymentRequest card) {
         var charge = chargeService.paidWithCard(chargeId, card);
         return new ResponseEntity<>(charge, HttpStatus.OK);
     }

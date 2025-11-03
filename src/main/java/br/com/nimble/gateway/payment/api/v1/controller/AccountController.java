@@ -25,7 +25,7 @@ public class AccountController implements AccountControllerDocs {
     @PostMapping
     public ResponseEntity<AccountResponse> deposit(
             @RequestBody @Valid AccountRequest accountRequest) {
-        var response = accountService.deposit(accountRequest.getAmount());
+        var response = accountService.deposit(accountRequest);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

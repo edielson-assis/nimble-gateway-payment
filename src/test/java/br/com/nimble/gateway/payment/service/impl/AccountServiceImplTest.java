@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
+import br.com.nimble.gateway.payment.api.v1.dto.request.AccountRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -91,9 +92,11 @@ class AccountServiceImplTest {
         when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
         BigDecimal amount = new BigDecimal("50.00");
+        var account = new AccountRequest();
+        account.setAmount(amount);
 
         // Act
-        AccountResponse response = accountService.deposit(amount);
+        AccountResponse response = accountService.deposit(account);
 
         // Assert
         assertNotNull(response);

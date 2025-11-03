@@ -3,6 +3,7 @@ package br.com.nimble.gateway.payment.service.impl;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import br.com.nimble.gateway.payment.api.v1.dto.request.AccountRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,9 +43,10 @@ public class AccountServiceImpl implements AccountService, AccountChargeService 
 
     @Transactional
     @Override
-    public AccountResponse deposit(BigDecimal amount) {
+    public AccountResponse deposit(AccountRequest accountRequest) {
         var account = findAccountById(currentUser());
         var accountResponse = AccountMapper.toDto(account);
+        var amount =  accountRequest.getAmount();
         authorizerAdapter.isAuthorizedTransaction(accountResponse, amount, TransactionType.DEPOSIT);
         account.deposit(amount);
         transactionService.registerDeposit(
